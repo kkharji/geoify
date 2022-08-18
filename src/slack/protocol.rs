@@ -1,15 +1,31 @@
+mod chat;
+mod events;
+
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use websocket_lite::Message;
 
+pub use chat::*;
+pub use events::*;
+
 #[derive(Debug, Deserialize)]
 pub struct WSConnectResponse {
-    /// Response status
-    pub ok: bool,
-    /// WebSocket Url
+    #[serde(default)]
     pub url: String,
-    /// Error Message in case of errors
     pub error: Option<String>,
+    pub ok: bool,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum SlackMessage<'s> {
+    #[serde(borrow = "'s")]
+    Hello(HelloMessage<'s>),
+    #[serde(borrow = "'s")]
+    Disconnect(DisconnectMessage<'s>),
+    #[serde(borrow = "'s")]
+    EventsApi(EventsApiMessage<'s>),
+    None,
 }
 
 #[derive(Deserialize, Debug)]
@@ -38,18 +54,6 @@ pub struct EventsApiMessage<'s> {
     pub payload: EventsApiPayload<'s>,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum SlackMessage<'s> {
-    #[serde(borrow = "'s")]
-    Hello(HelloMessage<'s>),
-    #[serde(borrow = "'s")]
-    Disconnect(DisconnectMessage<'s>),
-    #[serde(borrow = "'s")]
-    EventsApi(EventsApiMessage<'s>),
-    None,
-}
-
 impl<'a> From<&'a Bytes> for SlackMessage<'a> {
     fn from(value: &'a Bytes) -> Self {
         match serde_json::from_slice::<SlackMessage>(value) {
@@ -60,13 +64,6 @@ impl<'a> From<&'a Bytes> for SlackMessage<'a> {
             }
         }
     }
-}
-
-#[derive(Serialize)]
-pub struct Acknowledge {
-    pub envelope_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -82,76 +79,11 @@ pub struct DebugInfo<'s> {
     pub approximate_connection_time: Option<u64>,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct EventsApiPayload<'s> {
-    pub team_id: &'s str,
-    #[serde(borrow = "'s")]
-    pub event: Event<'s>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum Event<'s> {
-    #[serde(borrow = "'s")]
-    Message(MessageEvent<'s>),
-    #[serde(borrow = "'s")]
-    ReactionAdded(ReactionEvent<'s>),
-    #[serde(borrow = "'s")]
-    ReactionRemoved(ReactionEvent<'s>),
-}
-
-#[derive(Deserialize, Debug)]
-pub struct MessageEvent<'s> {
-    pub event_ts: &'s str,
-    pub subtype: Option<&'s str>,
-    pub text: Option<std::borrow::Cow<'s, str>>,
-    pub user: Option<&'s str>,
-    pub ts: Option<&'s str>,
-    pub deleted_ts: Option<&'s str>,
-    pub team: Option<&'s str>,
-    pub channel: &'s str,
-    #[serde(default)]
-    pub hidden: bool,
-    #[serde(default)]
-    pub is_starred: bool,
-    #[serde(default)]
-    pub pinned_to: Vec<&'s str>,
-    #[serde(default, borrow = "'s")]
-    pub reactions: Vec<MessageReaction<'s>>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct MessageReaction<'s> {
-    pub name: &'s str,
-    pub count: u32,
-    #[serde(default, borrow = "'s")]
-    pub users: Vec<&'s str>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ReactionEvent<'s> {
-    pub event_ts: &'s str,
-    pub user: &'s str,
-    pub reaction: &'s str,
-    pub item_user: Option<&'s str>,
-    #[serde(borrow = "'s")]
-    pub item: ReactionItem<'s>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum ReactionItem<'s> {
-    Message {
-        channel: &'s str,
-        ts: &'s str,
-    },
-    File {
-        file: &'s str,
-    },
-    FileComment {
-        file_comment: &'s str,
-        file: &'s str,
-    },
+#[derive(Serialize)]
+pub struct Acknowledge {
+    pub envelope_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payload: Option<String>,
 }
 
 impl Acknowledge {

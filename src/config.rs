@@ -1,3 +1,4 @@
+use reqwest::header::HeaderMap;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -24,6 +25,17 @@ impl Config {
         tracing::debug!("Load Configuration & Setup logger");
 
         config
+    }
+
+    pub fn client_headers(&self) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "Authorization",
+            format!("Bearer {}", self.slack_api_token)
+                .parse()
+                .expect("Parse slack api token"),
+        );
+        headers
     }
 }
 
