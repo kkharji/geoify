@@ -1,28 +1,28 @@
 mod protocol;
 mod websocket;
 use crate::config::Config;
+use reqwest::Client;
 
-use eyre::Result;
+use eyre::{Context, Result};
 pub use protocol::*;
 pub use websocket::*;
 
-/// Requests [apps.connections.open](https://api.slack.com/methods/apps.connections.open).
-/// Used to get websocket url
+/// Call [apps.connections.open](https://api.slack.com/methods/apps.connections.open).
 pub async fn connection_open(config: &Config) -> Result<String> {
-    let mut response = surf::post("https://slack.com/api/apps.connections.open")
-        .header(
-            "Authorization",
-            format!("Bearer {}", config.slack_api_token),
-        )
-        .recv_json::<WSConnectResponse>()
+    Client::builder()
+        .build()?
+        .post("https://slack.com/api/apps.connections.open")
+        .bearer_auth(&config.slack_api_token)
+        .send()
+        .await?
+        .json::<WSConnectResponse>()
         .await
-        .unwrap();
-
-    if !response.ok {
-        eyre::bail!(
-            "Failed to get websocket url! {}",
-            response.error.unwrap_or_default()
-        );
-    }
-    Ok(response.url)
+        .context("Parse WSConnectResponse")
+        .and_then(|res| {
+            if !res.ok {
+                let err = res.error.unwrap_or_default();
+                eyre::bail!("Failed to get websocket url: {err}",);
+            }
+            Ok(res.url)
+        })
 }
