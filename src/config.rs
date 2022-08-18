@@ -6,7 +6,7 @@ use serde::Deserialize;
 pub struct Config {
     pub host: String,
     pub port: u16,
-    pub slack_api_toekn: String,
+    pub slack_api_token: String,
     pub rust_log: String,
     pub log_file: String,
 }
