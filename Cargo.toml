@@ -3,6 +3,28 @@ name = "slack-geoify"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+actix-web = "4.1.0"
+
+# Serialization/deserialization =====================================
+serde = { version ="1.0.136", features = ["derive"]  }
+serde_json = "1.0.79"
+
+# read dotenv config ================================================
+dotenv = "0.15.0"
+
+# Configuration system ==============================================
+config = "0.13.2"
+
+# Logging ===========================================================
+tracing = "0.1.32"
+tracing-futures = "0.2.5"
+tracing-log = { version = "0.1.2", features = [ "env_logger" ] }
+tracing-subscriber = { version = "0.3.9", features = ["env-filter", "registry", "time"]}
+tracing-appender = "0.2.2"
+tracing-actix-web = "0.6.0"
+
+
+# Generic Error Type ================================================
+eyre = "0.6.7"
+color-eyre = "0.6.1"
