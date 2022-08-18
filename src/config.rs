@@ -8,10 +8,11 @@ pub struct Config {
     pub port: u16,
     pub slack_api_toekn: String,
     pub rust_log: String,
+    pub log_file: String,
 }
 
 impl Config {
-    pub fn from_env() -> Result<Config> {
+    pub fn try_read() -> Result<Config> {
         dotenv::dotenv().ok();
 
         let config = config::Config::builder()
@@ -28,7 +29,7 @@ impl Config {
 
 #[test]
 fn read_config_for_env() -> Result<()> {
-    let config = Config::from_env();
+    let config = Config::try_read();
     assert!(config.is_ok(), "{config:?}");
     Ok(())
 }
