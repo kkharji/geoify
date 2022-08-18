@@ -1,5 +1,3 @@
-use color_eyre::Result;
-use eyre::Context;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -12,24 +10,23 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn try_read() -> Result<Config> {
+    pub fn read() -> Config {
         dotenv::dotenv().ok();
 
         let config = config::Config::builder()
             .add_source(config::Environment::default())
-            .build()?
+            .build()
+            .expect("Build Configuration")
             .try_deserialize::<Config>()
-            .wrap_err("Unable to read configuration")?;
+            .expect("Deserialize Configuration");
 
         tracing::debug!("Load Configuration & Setup logger");
 
-        Ok(config)
+        config
     }
 }
 
 #[test]
-fn read_config_for_env() -> Result<()> {
-    let config = Config::try_read();
-    assert!(config.is_ok(), "{config:?}");
-    Ok(())
+fn read_config_for_env() {
+    Config::read();
 }
