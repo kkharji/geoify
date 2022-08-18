@@ -1,4 +1,6 @@
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
+use websocket_lite::Message;
 
 #[derive(Debug, Deserialize)]
 pub struct WSConnectResponse {
@@ -12,31 +14,59 @@ pub struct WSConnectResponse {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "type")]
+pub struct HelloMessage<'s> {
+    pub num_connections: u32,
+    #[serde(borrow = "'s")]
+    pub connection_info: ConnectionInfo<'s>,
+    #[serde(borrow = "'s")]
+    pub debug_info: DebugInfo<'s>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub struct DisconnectMessage<'s> {
+    pub reason: &'s str,
+    #[serde(borrow = "'s")]
+    pub debug_info: DebugInfo<'s>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub struct EventsApiMessage<'s> {
+    pub envelope_id: &'s str,
+    #[serde(borrow = "'s")]
+    pub payload: EventsApiPayload<'s>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum SlackMessage<'s> {
-    Hello {
-        num_connections: u32,
-        #[serde(borrow = "'s")]
-        connection_info: ConnectionInfo<'s>,
-        #[serde(borrow = "'s")]
-        debug_info: DebugInfo<'s>,
-    },
-    Disconnect {
-        reason: &'s str,
-        #[serde(borrow = "'s")]
-        debug_info: DebugInfo<'s>,
-    },
-    EventsApi {
-        envelope_id: &'s str,
-        #[serde(borrow = "'s")]
-        payload: EventsApiPayload<'s>,
-    },
+    #[serde(borrow = "'s")]
+    Hello(HelloMessage<'s>),
+    #[serde(borrow = "'s")]
+    Disconnect(DisconnectMessage<'s>),
+    #[serde(borrow = "'s")]
+    EventsApi(EventsApiMessage<'s>),
+    None,
+}
+
+impl<'a> From<&'a Bytes> for SlackMessage<'a> {
+    fn from(value: &'a Bytes) -> Self {
+        match serde_json::from_slice::<SlackMessage>(value) {
+            Ok(m) => m,
+            Err(err) => {
+                tracing::error!("Failed to parse a message: {value:?}: {err:?}");
+                SlackMessage::None
+            }
+        }
+    }
 }
 
 #[derive(Serialize)]
-pub struct Acknowledge<'s> {
-    pub envelope_id: &'s str,
+pub struct Acknowledge {
+    pub envelope_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload: Option<&'s str>,
+    pub payload: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -122,4 +152,21 @@ pub enum ReactionItem<'s> {
         file_comment: &'s str,
         file: &'s str,
     },
+}
+
+impl Acknowledge {
+    pub fn new<S: AsRef<str>>(envelope_id: S, payload: Option<S>) -> Self {
+        Self {
+            envelope_id: envelope_id.as_ref().into(),
+            payload: payload.map(|s| s.as_ref().into()),
+        }
+    }
+    pub fn as_message(&self) -> Message {
+        let text = serde_json::to_string(self)
+            .map_err(|err| {
+                tracing::error!("Failed to convert Acknowledge to string {err}");
+            })
+            .unwrap_or_default();
+        Message::text(text)
+    }
 }
