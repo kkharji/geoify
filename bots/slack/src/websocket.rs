@@ -1,9 +1,9 @@
 use std::ops::ControlFlow;
 
-// use eyre::Result;
 use super::{MessageEvent, PostMessageRequest, PostMessageResponse, SlackMessage};
 use crate::config::Config;
 use crate::protocol::{Acknowledge, Event, WSConnectResponse};
+use eyre::Result;
 use futures::{SinkExt, TryFutureExt};
 use reqwest::Client;
 use tokio_util::codec::Framed;
@@ -48,13 +48,23 @@ impl WSClient {
         Self { stream, client }
     }
 
-    pub async fn on_message(&mut self, msg: MessageEvent<'_>) {
-        tracing::trace!("{msg:#?}");
-        let msg_text = msg.text.to_string();
-        tracing::debug!("Message Content {msg_text:?}");
+    pub async fn on_message(&mut self, msg: MessageEvent<'_>) -> Result<()> {
         if msg.bot_id.is_none() {
-            self.post_message(msg, msg_text).await
+            tracing::trace!("{msg:#?}");
+            let msg_text = msg.text.to_string();
+            let client = Client::builder().build()?;
+            let payload = serde_json::json!({ "message": msg_text });
+            let response = client
+                .get("http://localhost:3291/identify")
+                .json(&payload)
+                .send()
+                .and_then(|r| r.json::<serde_json::Value>())
+                .await?;
+
+            tracing::debug!("NLP Response {:#?}", response);
+            self.post_message(msg, msg_text).await?;
         }
+        Ok(())
     }
 
     pub async fn handle(&mut self, msg: SlackMessage<'_>) -> ControlFlow<()> {
@@ -78,7 +88,11 @@ impl WSClient {
                     .ok();
 
                 match event.payload.event {
-                    Event::Message(msg) => self.on_message(msg).await,
+                    Event::Message(msg) => {
+                        if let Err(err) = self.on_message(msg).await {
+                            tracing::error!("Fail to handle message: {err}")
+                        }
+                    }
                     Event::ReactionAdded(_) => {}
                     Event::ReactionRemoved(_) => {}
                 }
@@ -93,7 +107,11 @@ impl WSClient {
     }
 
     /// Send Reply to Slack
-    pub async fn post_message<S: AsRef<str>>(&mut self, event: MessageEvent<'_>, message: S) {
+    pub async fn post_message<S: AsRef<str>>(
+        &mut self,
+        event: MessageEvent<'_>,
+        message: S,
+    ) -> Result<()> {
         let request = PostMessageRequest {
             channel: event.channel,
             text: message.as_ref(),
@@ -101,25 +119,17 @@ impl WSClient {
         };
         tracing::trace!("Sending {request:#?}");
 
-        let response = match self
+        let response = self
             .client
             .post("https://slack.com/api/chat.postMessage")
             .json(&request)
             .send()
             .and_then(|r| r.json::<PostMessageResponse>())
-            .await
-        {
-            Ok(r) => r,
-            Err(err) => {
-                tracing::error!("Failed to send post message request {err}");
-                return;
-            }
-        };
+            .await?;
 
         if !response.ok {
-            tracing::error!("post message failed: error {:?}", response.error.as_ref());
+            eyre::bail!("post message failed: error {:?}", response.error.as_ref());
         }
-
-        tracing::trace!("{response:#?}")
+        Ok(())
     }
 }

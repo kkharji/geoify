@@ -7,8 +7,6 @@ use tracing_subscriber::{registry, EnvFilter};
 
 pub fn setup(config: &crate::config::Config) {
     color_eyre::install().expect("Install color eyre");
-    println!("{}", config.rust_log);
-
     set_global_default(
         registry()
             .with(
