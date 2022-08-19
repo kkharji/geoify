@@ -1,30 +1,8 @@
 mod config;
+mod endpoint;
 mod logging;
 
-use actix_web::web::{self, Json};
-use actix_web::{App, HttpServer, Responder};
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize)]
-pub struct NlpIdentifyRequest {
-    pub message: String,
-}
-
-#[derive(Serialize)]
-pub struct NlpIdentifyResponse {
-    pub city: String,
-    pub time: bool,
-    pub weather: bool,
-}
-
-#[actix_web::get("/identify")]
-async fn identify(body: Json<NlpIdentifyRequest>) -> impl Responder {
-    Json(NlpIdentifyResponse {
-        city: "tokyo".into(),
-        time: true,
-        weather: true,
-    })
-}
+use actix_web::{web, App, HttpServer};
 
 #[actix_web::main]
 async fn main() {
@@ -35,7 +13,7 @@ async fn main() {
     let server = HttpServer::new(|| {
         App::new()
             .route("/ping", web::get().to(|| async { "pong" }))
-            .service(identify)
+            .service(endpoint::identify)
     })
     .bind((config.host.as_str(), config.port))
     .expect("Bind host")
