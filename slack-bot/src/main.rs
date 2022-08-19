@@ -1,11 +1,12 @@
 mod config;
 mod logging;
-mod slack;
-
-use std::ops::ControlFlow;
+mod protocol;
+mod websocket;
 
 use futures::{SinkExt, StreamExt};
-use slack::*;
+use protocol::*;
+use std::ops::ControlFlow;
+use websocket::*;
 use websocket_lite::{Message, Opcode};
 
 #[tokio::main]

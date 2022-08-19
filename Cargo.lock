@@ -446,6 +446,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoify-slack-bot"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "color-eyre",
+ "config",
+ "derive-deref-rs",
+ "dotenv",
+ "eyre",
+ "futures",
+ "once_cell",
+ "openssl",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-appender",
+ "tracing-futures",
+ "tracing-log",
+ "tracing-subscriber",
+ "websocket-lite",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1285,32 +1311,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4614a76b2a8be0058caa9dbbaf66d988527d86d003c11a94fbd335d7661edcef"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "slack-geoify"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "color-eyre",
- "config",
- "derive-deref-rs",
- "dotenv",
- "eyre",
- "futures",
- "once_cell",
- "openssl",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tokio-util",
- "tracing",
- "tracing-appender",
- "tracing-futures",
- "tracing-log",
- "tracing-subscriber",
- "websocket-lite",
 ]
 
 [[package]]

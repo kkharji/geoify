@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 // use eyre::Result;
 use super::{MessageEvent, PostMessageRequest, PostMessageResponse, SlackMessage};
 use crate::config::Config;
-use crate::slack::{Acknowledge, Event, WSConnectResponse};
+use crate::protocol::{Acknowledge, Event, WSConnectResponse};
 use futures::{SinkExt, TryFutureExt};
 use reqwest::Client;
 use tokio_util::codec::Framed;
