@@ -1,4 +1,4 @@
-# slack-geoify.rs
+# Geoify.rs
 
 Microservice-based slack bot that provide time and weather information for a given city.
 
