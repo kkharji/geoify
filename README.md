@@ -1,14 +1,14 @@
 # Geoify.rs
 
-Microservice-based slack bot that provide time and weather information for a given city.
+Microservice-based bot that provide time and weather information for a given city.
 
 ```
-Slack API --New Message Notification--> Bot {
+Client Chat API --New Message Notification--> Bot {
   -> Message
   -> NLP (todo)
   -> Command
   -> Message
-} --Reply--> Slack API
+} --Reply--> Client Chat API
 ```
 
 ## Components and Responsibilities
