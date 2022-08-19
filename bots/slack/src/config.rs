@@ -13,8 +13,7 @@ pub struct Config {
 
 impl Config {
     pub fn read() -> Config {
-        dotenv::dotenv().ok();
-
+        dotenv::from_filename("./bots/slack/.env").ok();
         let config = config::Config::builder()
             .add_source(config::Environment::default())
             .build()

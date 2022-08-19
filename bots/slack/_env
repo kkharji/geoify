@@ -2,5 +2,5 @@ HOST=localhost
 PORT=3432
 SLACK_API_TOKEN=""
 SLACK_SOCKET_TOEKN=""
-RUST_LOG="slack_geoify=trace,actix_web=debug"
+RUST_LOG="geoify_slack_bot=trace,actix_web=debug"
 LOG_FILE=/tmp/slack-geoify.log

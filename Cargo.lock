@@ -763,6 +763,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "geoify-nlp"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-web",
+ "color-eyre",
+ "config",
+ "dotenv",
+ "eyre",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-appender",
+ "tracing-futures",
+ "tracing-log",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "geoify-slack-bot"
 version = "0.1.0"
 dependencies = [
@@ -1130,25 +1150,6 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
-]
-
-[[package]]
-name = "nlp"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-web",
- "color-eyre",
- "dotenv",
- "eyre",
- "once_cell",
- "serde",
- "serde_json",
- "tracing",
- "tracing-appender",
- "tracing-futures",
- "tracing-log",
- "tracing-subscriber",
 ]
 
 [[package]]

@@ -1,0 +1,4 @@
+HOST="localhost"
+PORT="3291"
+RUST_LOG="geoify_nlp=trace,actix_web=warn,actix_server=warn"
+
